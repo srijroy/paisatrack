@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="description" content="AI Smart Expense Tracker for Indian College Students" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PaisaTrack" />
+
+  <title>PaisaTrack — Smart Expense Tracker</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+</head>
+<body>
+
+<!-- ===================== APP ROOT ===================== -->
+<div id="app">
+
+  <!-- ============ HEADER ============ -->
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-icon">₹</div>
+      <div class="logo-text">PaisaTrack</div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="openBudgetModal()" title="Set Budget">🎯</button>
+      <button class="icon-btn" id="install-btn" onclick="installApp()" title="Install App" style="display:none">📲</button>
+    </div>
+  </header>
+
+  <!-- ============ HOME SECTION ============ -->
+  <section id="section-home" class="section active">
+
+    <!-- Balance Overview Card -->
+    <div class="balance-card">
+      <div class="balance-label">Total Spent</div>
+      <div class="balance-amount" id="balance-amount"><span>₹</span>0</div>
+
+      <!-- Period Tabs -->
+      <div style="margin-top:14px">
+        <div class="period-tabs">
+          <button class="period-tab active" data-period="today" onclick="setPeriod('today')">Today</button>
+          <button class="period-tab" data-period="week"  onclick="setPeriod('week')">This Week</button>
+          <button class="period-tab" data-period="month" onclick="setPeriod('month')">This Month</button>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="balance-row">
+        <div class="balance-stat">
+          <div class="balance-stat-label">Today</div>
+          <div class="balance-stat-value" id="today-stat">₹0</div>
+        </div>
+        <div class="balance-stat">
+          <div class="balance-stat-label">This Week</div>
+          <div class="balance-stat-value" id="week-stat">₹0</div>
+        </div>
+        <div class="balance-stat">
+          <div class="balance-stat-label">This Month</div>
+          <div class="balance-stat-value" id="month-stat">₹0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget Progress -->
+    <div class="budget-card card mb-16">
+      <div class="budget-header">
+        <h3>Monthly Budget</h3>
+        <span id="budget-pct">Not set</span>
+      </div>
+      <div class="budget-bar-track">
+        <div class="budget-bar-fill" id="budget-bar-fill" style="width:0%"></div>
+      </div>
+      <div class="budget-stats">
+        <span id="budget-remaining">—</span>
+        <button class="btn btn-ghost btn-sm" onclick="openBudgetModal()" style="padding:4px 10px;font-size:0.72rem">Edit</button>
+      </div>
+    </div>
+
+    <!-- Quick Add Buttons -->
+    <div class="quick-add-section">
+      <div class="quick-add-label">Quick Add</div>
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="quickAdd(50, 'Chai', 'food')"><span class="emoji">☕</span> ₹50 Chai</button>
+        <button class="quick-btn" onclick="quickAdd(100, 'Food', 'food')"><span class="emoji">🍛</span> ₹100 Food</button>
+        <button class="quick-btn" onclick="quickAdd(20, 'Auto', 'travel')"><span class="emoji">🚌</span> ₹20 Auto</button>
+        <button class="quick-btn" onclick="quickAdd(200, 'Grocery', 'shop')"><span class="emoji">🛒</span> ₹200 Grocery</button>
+        <button class="quick-btn" onclick="openExpenseModal()"><span class="emoji">➕</span> Custom</button>
+      </div>
+    </div>
+
+    <!-- Category Chart -->
+    <div class="card chart-container mb-16">
+      <div class="section-title">Spending by Category</div>
+      <canvas id="categoryChart"></canvas>
+      <div class="category-legend" id="category-legend"></div>
+    </div>
+
+    <!-- Recent Expenses -->
+    <div class="section-title">
+      Recent Expenses
+      <a onclick="navigateTo('expenses')">See all →</a>
+    </div>
+    <div class="expense-list" id="home-expense-list">
+      <div class="empty-state">
+        <div class="empty-icon">💸</div>
+        <p>No expenses yet. Start tracking!</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ EXPENSES SECTION ============ -->
+  <section id="section-expenses" class="section">
+
+    <div style="padding-top:4px">
+      <h2 style="margin-bottom:14px">All Expenses</h2>
+
+      <!-- Filter Chips -->
+      <div class="filter-chips">
+        <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">All</button>
+        <button class="filter-chip" data-filter="food"   onclick="setFilter('food')">🍔 Food</button>
+        <button class="filter-chip" data-filter="travel" onclick="setFilter('travel')">🚌 Travel</button>
+        <button class="filter-chip" data-filter="shop"   onclick="setFilter('shop')">🛍️ Shop</button>
+        <button class="filter-chip" data-filter="bills"  onclick="setFilter('bills')">💡 Bills</button>
+        <button class="filter-chip" data-filter="others" onclick="setFilter('others')">📦 Others</button>
+      </div>
+
+      <div class="expense-list" id="all-expense-list"></div>
+    </div>
+
+  </section>
+
+  <!-- ============ INSIGHTS SECTION ============ -->
+  <section id="section-insights" class="section">
+
+    <h2 style="margin-bottom:4px">AI Insights</h2>
+    <p style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:16px">Powered by Claude AI · Your real financial advisor</p>
+
+    <!-- Personality -->
+    <div id="personality-display" class="mb-16"></div>
+
+    <!-- AI Analysis Card -->
+    <div class="card mb-16" style="border-color:rgba(124,110,247,0.4)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div style="width:34px;height:34px;background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">🤖</div>
+        <div>
+          <div style="font-weight:700;font-size:0.95rem">Claude AI Analysis</div>
+          <div style="font-size:0.72rem;color:var(--text-secondary)">Personalized advice for your spending</div>
+        </div>
+        <button onclick="getAIInsights()" id="ai-refresh-btn" style="margin-left:auto;background:rgba(124,110,247,0.15);border:1px solid rgba(124,110,247,0.3);color:var(--accent);border-radius:8px;padding:6px 12px;font-size:0.78rem;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;white-space:nowrap">
+          ✨ Analyze
+        </button>
+      </div>
+      <div id="ai-response" style="min-height:60px">
+        <div style="text-align:center;padding:20px;color:var(--text-muted);font-size:0.85rem">
+          Tap <strong style="color:var(--accent)">✨ Analyze</strong> to get personalized AI insights about your spending habits.
+        </div>
+      </div>
+    </div>
+
+    <!-- Ask AI a custom question -->
+    <div class="card mb-16">
+      <div class="section-title" style="margin-bottom:10px">Ask AI Anything</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="ai-question-input" class="form-input" placeholder="e.g. How can I save more?" style="flex:1" onkeydown="if(event.key==='Enter') askAIQuestion()" />
+        <button onclick="askAIQuestion()" style="background:var(--accent);border:none;color:white;border-radius:12px;padding:0 18px;font-size:1.2rem;cursor:pointer;flex-shrink:0;transition:var(--transition)">→</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">
+        <button class="quick-btn" style="font-size:0.72rem;padding:5px 10px" onclick="setAIQuestion('Where am I overspending?')">Where am I overspending?</button>
+        <button class="quick-btn" style="font-size:0.72rem;padding:5px 10px" onclick="setAIQuestion('Give me a savings plan for this month')">Savings plan</button>
+        <button class="quick-btn" style="font-size:0.72rem;padding:5px 10px" onclick="setAIQuestion('Am I spending too much on food?')">Food spending?</button>
+        <button class="quick-btn" style="font-size:0.72rem;padding:5px 10px" onclick="setAIQuestion('How do I reach my savings goal faster?')">Reach goal faster?</button>
+      </div>
+      <div id="ai-question-response" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Rule-based quick insights -->
+    <div class="section-title">Quick Insights</div>
+    <div id="insights-list" class="mb-16"></div>
+
+    <!-- Category Breakdown -->
+    <div class="card mb-16">
+      <div class="section-title">Category Breakdown (This Month)</div>
+      <div id="cat-breakdown" class="mt-12"></div>
+    </div>
+
+  </section>
+
+  <!-- ============ PROFILE SECTION ============ -->
+  <section id="section-profile" class="section">
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-avatar">🎓</div>
+      <div class="profile-name" id="profile-name-display">Student</div>
+      <div class="profile-subtitle" id="profile-college-display">My College</div>
+    </div>
+
+    <!-- Borrow / Lend -->
+    <div class="section-title">Borrow / Lend Tracker</div>
+    <div class="bl-summary">
+      <div class="bl-stat lend-stat">
+        <div class="bl-stat-label lend-stat">You Lent</div>
+        <div class="bl-stat-amount lend-amount" id="total-lent">₹0</div>
+      </div>
+      <div class="bl-stat borrow-stat">
+        <div class="bl-stat-label borrow-stat">You Owe</div>
+        <div class="bl-stat-amount borrow-amount" id="total-borrowed">₹0</div>
+      </div>
+    </div>
+    <div id="borrow-list" class="mb-12"></div>
+    <button class="btn btn-ghost mb-16" onclick="openBorrowModal()">➕ Add Borrow / Lend Record</button>
+
+    <div class="divider"></div>
+
+    <!-- Savings Goal -->
+    <div class="section-title">Savings Goal</div>
+    <div id="goal-section" class="mb-12"></div>
+    <button class="btn btn-ghost mb-16" onclick="openGoalModal('edit-goal')">🎯 Set / Edit Goal</button>
+
+    <div class="divider"></div>
+
+    <!-- Settings -->
+    <div class="section-title">Settings</div>
+
+    <div class="setting-item" onclick="openProfileModal()">
+      <div class="setting-icon" style="background:rgba(124,110,247,0.15)">👤</div>
+      <div class="setting-info">
+        <div class="setting-title">Edit Profile</div>
+        <div class="setting-subtitle">Name, College</div>
+      </div>
+      <span class="setting-chevron">›</span>
+    </div>
+
+    <div class="setting-item" onclick="openBudgetModal()">
+      <div class="setting-icon" style="background:rgba(247,196,110,0.15)">💰</div>
+      <div class="setting-info">
+        <div class="setting-title">Monthly Budget</div>
+        <div class="setting-subtitle" id="budget-display">Not set</div>
+      </div>
+      <span class="setting-chevron">›</span>
+    </div>
+
+    <div class="setting-item" onclick="enableNotifications()">
+      <div class="setting-icon" style="background:rgba(110,247,184,0.15)">🔔</div>
+      <div class="setting-info">
+        <div class="setting-title">Notifications</div>
+        <div class="setting-subtitle">Daily reminders & alerts</div>
+      </div>
+      <button id="notif-btn" style="background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-size:0.82rem">Enable</button>
+    </div>
+
+    <div class="setting-item" onclick="clearAllData()">
+      <div class="setting-icon" style="background:rgba(255,107,107,0.15)">🗑️</div>
+      <div class="setting-info">
+        <div class="setting-title">Clear All Data</div>
+        <div class="setting-subtitle">Reset everything</div>
+      </div>
+      <span class="setting-chevron" style="color:var(--danger)">›</span>
+    </div>
+
+    <div style="text-align:center;padding:24px 0 8px;color:var(--text-muted);font-size:0.75rem">
+      PaisaTrack v1.0 · Made for Indian College Students 🇮🇳
+    </div>
+
+  </section>
+
+</div><!-- /#app -->
+
+<!-- ============ BOTTOM NAVIGATION ============ -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-section="home" onclick="navigateTo('home')">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">Home</span>
+  </button>
+  <button class="nav-item" data-section="expenses" onclick="navigateTo('expenses')">
+    <span class="nav-icon">📋</span>
+    <span class="nav-label">Expenses</span>
+  </button>
+  <button class="nav-item nav-add" data-section="add" onclick="openExpenseModal()">
+    <div class="nav-add-inner">＋</div>
+  </button>
+  <button class="nav-item" data-section="insights" onclick="navigateTo('insights')">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Insights</span>
+  </button>
+  <button class="nav-item" data-section="profile" onclick="navigateTo('profile')">
+    <span class="nav-icon">👤</span>
+    <span class="nav-label">Profile</span>
+  </button>
+</nav>
+
+<!-- ============ TOAST CONTAINER ============ -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ======================================================
+     MODALS
+====================================================== -->
+
+<!-- Add/Edit Expense Modal -->
+<div class="modal-overlay" id="expense-modal-overlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title">Add Expense</div>
+
+    <div class="form-group">
+      <label class="form-label">Amount (₹)</label>
+      <div class="input-prefix">
+        <span class="input-prefix-symbol">₹</span>
+        <input type="number" class="form-input" id="expense-amount" placeholder="0" min="0" step="0.01" inputmode="decimal" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Note / Description</label>
+      <input type="text" class="form-input" id="expense-note" placeholder="e.g. Chai at canteen"
+        oninput="onNoteInput(this.value)" autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <div class="category-grid">
+        <div class="category-chip selected" data-cat="food"   onclick="selectCat(this)">
+          <span class="chip-icon">🍔</span>Food
+        </div>
+        <div class="category-chip" data-cat="travel" onclick="selectCat(this)">
+          <span class="chip-icon">🚌</span>Travel
+        </div>
+        <div class="category-chip" data-cat="shop"   onclick="selectCat(this)">
+          <span class="chip-icon">🛍️</span>Shop
+        </div>
+        <div class="category-chip" data-cat="bills"  onclick="selectCat(this)">
+          <span class="chip-icon">💡</span>Bills
+        </div>
+        <div class="category-chip" data-cat="others" onclick="selectCat(this)">
+          <span class="chip-icon">📦</span>Others
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-input" id="expense-date" />
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" onclick="closeModal('expense-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitExpense()">Save Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- Budget Modal -->
+<div class="modal-overlay" id="budget-modal-overlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Set Monthly Budget</div>
+
+    <div class="form-group">
+      <label class="form-label">Monthly Budget (₹)</label>
+      <div class="input-prefix">
+        <span class="input-prefix-symbol">₹</span>
+        <input type="number" class="form-input" id="budget-input" placeholder="e.g. 5000" min="0" inputmode="decimal" />
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;font-size:0.82rem;color:var(--text-secondary)">
+      We'll calculate your daily budget automatically and track your spending against it.
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="closeModal('budget-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitBudget()">Set Budget</button>
+    </div>
+  </div>
+</div>
+
+<!-- Borrow Modal -->
+<div class="modal-overlay" id="borrow-modal-overlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Borrow / Lend</div>
+
+    <div class="form-group">
+      <label class="form-label">Person's Name</label>
+      <input type="text" class="form-input" id="borrow-name" placeholder="e.g. Rahul Sharma" autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Amount (₹)</label>
+      <div class="input-prefix">
+        <span class="input-prefix-symbol">₹</span>
+        <input type="number" class="form-input" id="borrow-amount" placeholder="0" min="0" inputmode="decimal" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="borrow-type">
+        <option value="lend">💸 I Lent (they owe me)</option>
+        <option value="borrow">💰 I Borrowed (I owe them)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Note (optional)</label>
+      <input type="text" class="form-input" id="borrow-note" placeholder="e.g. For lunch, repaid by Friday" autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input type="date" class="form-input" id="borrow-date" />
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="closeModal('borrow-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitBorrow()">Save Record</button>
+    </div>
+  </div>
+</div>
+
+<!-- Goal Modal -->
+<div class="modal-overlay" id="goal-modal-overlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="goal-modal-title">Set Savings Goal</div>
+
+    <!-- Main Goal Form -->
+    <div id="goal-form-main">
+      <div class="form-group">
+        <label class="form-label">Goal Name</label>
+        <input type="text" class="form-input" id="goal-name" placeholder="e.g. New Phone, Trip to Goa" autocomplete="off" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Target Amount (₹)</label>
+        <div class="input-prefix">
+          <span class="input-prefix-symbol">₹</span>
+          <input type="number" class="form-input" id="goal-target" placeholder="e.g. 10000" min="0" inputmode="decimal" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Target Date (optional)</label>
+        <input type="date" class="form-input" id="goal-deadline" />
+      </div>
+    </div>
+
+    <!-- Add Savings Form -->
+    <div id="goal-form-savings" style="display:none">
+      <div class="form-group">
+        <label class="form-label">Amount to Add (₹)</label>
+        <div class="input-prefix">
+          <span class="input-prefix-symbol">₹</span>
+          <input type="number" class="form-input" id="savings-amount" placeholder="0" min="0" inputmode="decimal" />
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-ghost" onclick="closeModal('goal-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitGoal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Edit Modal -->
+<div class="modal-overlay" id="profile-modal-overlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Edit Profile</div>
+
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <input type="text" class="form-input" id="profile-name-input" placeholder="e.g. Aryan Singh" autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">College / University</label>
+      <input type="text" class="form-input" id="profile-college-input" placeholder="e.g. IIT Delhi" autocomplete="off" />
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-ghost" onclick="closeModal('profile-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+
+<script>
+  // Additional inline helpers that rely on the DOM
+
+  function selectCat(el) {
+    document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function clearAllData() {
+    if (!confirm('⚠️ This will delete ALL your data (expenses, goals, records). Are you sure?')) return;
+    Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
+    location.reload();
+  }
+
+  // Set today's date as default for date inputs when opened
+  document.querySelectorAll('input[type="date"]').forEach(inp => {
+    if (!inp.value) {
+      inp.valueAsDate = new Date();
+    }
+  });
+
+  // Handle Enter key in modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay.open').forEach(m => {
+        m.classList.remove('open');
+        document.body.style.overflow = '';
+      });
+    }
+  });
+
+  // Resize chart on orientation change
+  window.addEventListener('resize', () => {
+    if (currentSection === 'home') renderCategoryChart();
+  });
+</script>
+
+</body>
+</html>

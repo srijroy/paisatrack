@@ -1,0 +1,24 @@
+{
+  "name": "PaisaTrack - Smart Expense Tracker",
+  "short_name": "PaisaTrack",
+  "description": "AI-powered expense tracker for Indian college students",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f13",
+  "theme_color": "#6c63ff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%236c63ff'/><text y='130' x='30' font-size='120' font-family='serif'>₹</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='80' fill='%236c63ff'/><text y='370' x='60' font-size='330' font-family='serif'>₹</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["finance", "productivity"],
+  "screenshots": []
+}
